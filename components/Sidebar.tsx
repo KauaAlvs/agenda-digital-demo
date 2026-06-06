@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -11,7 +11,6 @@ import {
   Settings, 
   LogOut, 
   ChevronDown,
-  ChevronRight,
   Menu,
   X
 } from 'lucide-react';
@@ -30,7 +29,7 @@ const menuItems = [
     icon: CalendarDays,
     subItems: [
       { name: 'Calendário', href: '/dashboard/agenda' },
-      { name: 'Lista de Agendamentos', href: '/dashboard/agendamentos' },
+      { name: 'Meus Serviços', href: '/dashboard/servicos' },
     ]
   },
   {
@@ -38,8 +37,7 @@ const menuItems = [
     icon: Users,
     subItems: [
       { name: 'Meus Clientes', href: '/dashboard/clientes' },
-      { name: 'Novo Cadastro', href: '/dashboard/clientes/novo' },
-      { name: 'Gestão Avançada', href: '/dashboard/clientes/gestao' },
+      { name: 'Engajamento', href: '/dashboard/engajamento' },
     ]
   }
 ];
@@ -51,6 +49,20 @@ export default function Sidebar() {
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({
     'Dashboard': true // Mantém o primeiro aberto por padrão
   });
+
+  // Efeito para travar o scroll do fundo quando o menu mobile estiver aberto
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    // Limpeza caso o componente seja desmontado
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileOpen]);
 
   const toggleDropdown = (title: string) => {
     if (isCollapsed) setIsCollapsed(false);
@@ -70,7 +82,7 @@ export default function Sidebar() {
       {/* Overlay Mobile */}
       {isMobileOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -97,14 +109,14 @@ export default function Sidebar() {
               setIsCollapsed(!isCollapsed);
               if (!isCollapsed) setOpenDropdowns({}); // Fecha dropdowns ao recolher
             }}
-            className="hidden rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:block"
+            className="hidden rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:block transition-colors"
           >
             <Menu className="h-5 w-5" />
           </button>
 
           <button 
             onClick={() => setIsMobileOpen(false)}
-            className="block rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:hidden"
+            className="block rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:hidden transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -136,13 +148,14 @@ export default function Sidebar() {
 
                   {/* Dropdown Itens */}
                   {!isCollapsed && isOpen && (
-                    <div className="mt-1 flex flex-col gap-1 pl-11 pr-3">
+                    <div className="mt-1 flex flex-col gap-1 pl-11 pr-3 animate-in slide-in-from-top-2 fade-in duration-200">
                       {item.subItems.map((sub) => {
                         const isActive = pathname === sub.href;
                         return (
                           <Link 
                             key={sub.name} 
                             href={sub.href}
+                            onClick={() => setIsMobileOpen(false)} // Fecha a sidebar no mobile ao clicar no link
                             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
                               isActive 
                                 ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-500/20' 
@@ -163,21 +176,33 @@ export default function Sidebar() {
             <div className="my-4 h-px w-full bg-slate-100" />
 
             {/* Links Diretos */}
-            <Link href="/dashboard/perfil" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
-              <UserCircle className="h-5 w-5 text-slate-400" />
+            <Link 
+              href="/dashboard/perfil" 
+              onClick={() => setIsMobileOpen(false)}
+              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${
+                pathname === '/dashboard/perfil' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <UserCircle className={`h-5 w-5 ${pathname === '/dashboard/perfil' ? 'text-white' : 'text-slate-400'}`} />
               {!isCollapsed && <span>Meu Perfil</span>}
             </Link>
 
-            <Link href="/dashboard/configuracoes" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
-              <Settings className="h-5 w-5 text-slate-400" />
+            <Link 
+              href="/dashboard/configuracoes" 
+              onClick={() => setIsMobileOpen(false)}
+              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${
+                pathname === '/dashboard/configuracoes' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <Settings className={`h-5 w-5 ${pathname === '/dashboard/configuracoes' ? 'text-white' : 'text-slate-400'}`} />
               {!isCollapsed && <span>Configurações</span>}
             </Link>
           </nav>
         </div>
 
         {/* Footer da Sidebar - Perfil Rápido e Logout */}
-        <div className="border-t border-slate-100 p-4">
-          <div className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${isCollapsed ? 'justify-center' : 'hover:bg-slate-50'}`}>
+        <div className="border-t border-slate-100 p-4 bg-slate-50/50">
+          <div className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${isCollapsed ? 'justify-center' : 'hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-sm cursor-pointer'}`}>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md">
               <span className="font-bold">KA</span>
             </div>
@@ -190,7 +215,7 @@ export default function Sidebar() {
             )}
             
             {!isCollapsed && (
-              <Link href="/" className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors">
+              <Link href="/" className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Sair">
                 <LogOut className="h-5 w-5" />
               </Link>
             )}
